@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Darwin AI Weather Map</title>
+
+    <!-- Leaflet Map -->
+    <link rel="stylesheet"
+        href="https://unpkg.com/leaflet/dist/leaflet.css" />
+
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+    <style>
+
+        body {
+            margin: 0;
+            font-family: Arial;
+            text-align: center;
+            background: #111;
+            color: white;
+        }
+
+        h1 {
+            padding: 15px;
+            margin: 0;
+        }
+
+        /* خريطة ضخمة */
+        #map {
+            height: 90vh;
+            width: 100%;
+        }
+
+    </style>
+</head>
+
+<body>
+
+    <h1>🗺️ Darwin AI Weather System</h1>
+
+    <div id="map"></div>
+
+    <!-- Sound Alert -->
+    <audio id="alertSound">
+        <source src="https://www.soundjay.com/button/beep-07.wav" type="audio/wav">
+    </audio>
+
+    <script>
+
+        const sound = document.getElementById("alertSound");
+
+        // Darwin only
+        const city = {
+            name: "Darwin",
+            lat: -12.4634,
+            lon: 130.8456
+        };
+
+        // Create Map
+        const map = L.map('map').setView([city.lat, city.lon], 8);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: 'OpenStreetMap'
+        }).addTo(map);
+
+        // Weather API
+        let url =
+        `https://api.open-meteo.com/v1/forecast?latitude=${city.lat}&longitude=${city.lon}&current_weather=true`;
+
+        fetch(url)
+        .then(res => res.json())
+        .then(data => {
+
+            let temp = data.current_weather.temperature;
+            let wind = data.current_weather.windspeed;
+
+            // AI Risk System
+            let risk = "LOW";
+
+            if (temp >= 40 || wind >= 35) {
+                risk = "HIGH";
+            }
+            else if (temp >= 35 || wind >= 25) {
+                risk = "MEDIUM";
+            }
+
+            // Marker Color
+            let color = "green";
+
+            if (risk === "MEDIUM") color = "orange";
+            if (risk === "HIGH") color = "red";
+
+            // Add Marker
+            L.circleMarker([city.lat, city.lon], {
+                radius: 18,
+                color: color,
+                fillColor: color,
+                fillOpacity: 0.8
+            })
+            .addTo(map)
+            .bindPopup(
+                `<b>Darwin</b><br>
+                Temp: ${temp} °C<br>
+                Wind: ${wind} km/h<br>
+                Risk: ${risk}`
+            )
+            .openPopup();
+
+            // Sound Alert
+            if (risk === "HIGH") {
+                sound.play();
+            }
+
+        });
+
+    </script>
+
+</body>
+</html>
